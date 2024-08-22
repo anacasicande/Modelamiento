@@ -1,0 +1,48 @@
+import math
+
+# Constantes dadas
+P = 9.4573  # Presión en bar
+T = 350.0   # Temperatura en K
+R = 0.08314  # Constante de los gases en bar·L/mol·K
+
+# Propiedades críticas del n-butano
+Tc = 425.2  # Temperatura crítica en K
+Pc = 37.96  # Presión crítica en bar
+
+# Parámetros de la ecuación de Redlich-Kwong
+a = 0.42748 * R**2 * Tc**2.5 / Pc
+b = 0.08664 * R * Tc / Pc
+
+# Definir la función de Redlich-Kwong y su derivada
+def f(Vm):
+    term1 = (R * T) / (Vm - b)
+    term2 = a / (math.sqrt(T) * Vm * (Vm + b))
+    return P - (term1 - term2)
+
+def f_prime(Vm):
+    term1 = -(R * T) / (Vm - b)**2
+    term2 = -a * (2 * Vm + b) / (math.sqrt(T) * Vm**2 * (Vm + b)**2)
+    return term1 + term2
+
+# Método de Newton-Raphson
+def newton_raphson(Vm_guess, tol=1e-6, max_iter=100):
+    Vm = Vm_guess
+    for i in range(max_iter):
+        f_val = f(Vm)
+        f_deriv = f_prime(Vm)
+        Vm_new = Vm - f_val / f_deriv
+        if abs(Vm_new - Vm) < tol:
+            return Vm_new
+        Vm = Vm_new
+    raise ValueError("El método de Newton-Raphson no convergió.")
+
+# Estimaciones iniciales para los volúmenes molares
+Vm_guess_vapor = R * T / P  # Para el vapor
+Vm_guess_liquid = b  # Para el líquido (valor muy cercano a b)
+
+# Calcular los volúmenes molares
+Vm_vapor = newton_raphson(Vm_guess_vapor)
+Vm_liquid = newton_raphson(Vm_guess_liquid)
+
+print(f"Volumen molar del vapor saturado: {Vm_vapor:.6f} L/mol")
+print(f"Volumen molar del líquido saturado: {Vm_liquid:.6f} L/mol")
